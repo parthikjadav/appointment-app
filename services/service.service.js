@@ -1,0 +1,155 @@
+const expressAsyncHandler = require("express-async-handler");
+const { AppError } = require("../utils/response");
+const prisma = require("../utils/prisma.util");
+const { USER_ROLES } = require("../constants");
+
+
+
+const serviceService = {
+    getAllUsersServices: expressAsyncHandler(async (req, res) => {
+        try {
+            if (req.user.role !== USER_ROLES.ADMIN) {
+                const services = await prisma.service.findMany({
+                    where: {
+                        userId: req.user.id
+                    },
+                    include: {
+                        timings: true
+                    }
+                })
+                if(services.length === 0) return new AppError(res,404,"No services found, you have not created any service yet")
+                return services;
+            }
+            const services = await prisma.service.findMany({
+                include: {
+                    timings: true
+                }
+            });
+            return services;
+        } catch (error) {
+            return new AppError(res, 500, 'Failed to get all users', error.message);
+        }
+    }),
+    getServiceById: expressAsyncHandler(async (req, res) => {
+        try {
+            const service = await prisma.service.findUnique({ where: { id: req.params.id } })
+            if (!service) {
+                return new AppError(res, 404, 'Service not found');
+            }
+            return service;
+        } catch (error) {
+            return new AppError(res, 500, 'Failed to get service', error.message);
+        }
+    }),
+    createService: expressAsyncHandler(async (req, res) => {
+        try {
+            const { title, description, price, profileId } = req.body;
+            const profile = await prisma.profile.findUnique({ where: { id: profileId } })
+            if (!profile) {
+                return new AppError(res, 404, 'Profile not found');
+            }
+
+            const service = await prisma.service.create({
+                data: {
+                    title,
+                    description,
+                    price,
+                    userId: profile.userId,
+                    profileId,
+                    timings: {
+                        create: req.body.timings
+                    }
+                }
+            })
+            return service;
+        } catch (error) {
+            return new AppError(res, 500, 'Failed to create service', error.message);
+        }
+    }),
+    updateService: expressAsyncHandler(async (req, res) => {
+        try {
+            const { id } = req.params;
+            const service = await prisma.service.findUnique({ where: { id } })
+            if (!service) {
+                return new AppError(res, 404, 'Service not found');
+            }
+            if (req.user.role !== USER_ROLES.ADMIN) {
+                if (service.userId !== req.user.id) {
+                    return new AppError(res, 403, 'You are not authorized to update this service');
+                }
+            }
+            const { title, description, price } = req.body;
+            if (!title && !description && !price) {
+                return new AppError(res, 400, 'Please provide at least one field to update');
+            }
+            const updatedService = await prisma.service.update({
+                where: { id },
+                data: {
+                    title,
+                    description,
+                    price
+                }
+            })
+            return updatedService;
+        } catch (error) {
+            return new AppError(res, 500, 'Failed to update service', error.message);
+        }
+    }),
+    deleteService: expressAsyncHandler(async (req, res) => {
+        try {
+            const { id } = req.params;
+            const service = await prisma.service.findUnique({
+                where: { id },
+            });
+            if (!service) {
+                return new AppError(res, 404, 'Service not found');
+            }
+            if (req.user.role !== USER_ROLES.ADMIN) {
+                if (service.userId !== req.user.id) {
+                    return new AppError(res, 403, 'You are not authorized to delete this service');
+                }
+            }
+            const deletedService = await prisma.service.delete({
+                where: { id }
+            });
+            return deletedService;
+        } catch (error) {
+            return new AppError(res, 500, 'Failed to delete service', error.message);
+        }
+    }),
+    updateTiming: expressAsyncHandler(async (req, res) => {
+        try {
+            const { id } = req.params;
+            const { timing } = req.body;
+
+            const service = await prisma.service.findUnique({
+                where: { id },
+            });
+            if (!service) {
+                return new AppError(res, 404, 'Service not found');
+            }
+            if (req.user.role !== USER_ROLES.ADMIN) {
+                if (service.userId !== req.user.id) {
+                    return new AppError(res, 403, 'You are not authorized to update this service')
+                }
+            }
+            await prisma.timing.deleteMany({
+                where: { serviceId: id }
+            });
+            await prisma.timing.createMany({
+                data: timing.map((t) => ({ ...t, serviceId: id }))
+            });
+            const updatedService = await prisma.service.findMany({
+                where: { id },
+                include: {
+                    timings: true
+                }
+            })
+            return updatedService;
+        } catch (error) {
+            return new AppError(res, 500, 'Failed to update service', error.message);
+        }
+    })
+}
+
+module.exports = serviceService;

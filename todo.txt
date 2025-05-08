@@ -1,0 +1,15 @@
+TODO:  1. user can send a appointment request
+       [-]  user can see available slots
+       [-]  user can see his all appointments
+       [-]  user can cancel the appointment request before 15 minutes of appointment
+
+TODO:  2. professional can accept or reject the appointment request
+       [-]  professional can see all the appointment requests
+       [-]  professional can not reject appointment after accepting it
+
+TODO:  3. send email updates
+       [-]  send email to user when professional accepts the appointment request
+       [-]  send email to user when professional rejects the appointment request
+       [-]  send email to professional when user cancels the appointment request
+    
+TODO:  4. save all request and responses in postman 
