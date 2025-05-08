@@ -14,7 +14,7 @@ const appointmentRoute = require("./appointment.route")
 routes.use("/auth",authRoute)
 routes.use("/user",authenticate,userRoute)
 routes.use("/service",authenticate, authorize([USER_ROLES.ADMIN,USER_ROLES.PROFESSIONAL]),serviceRoute)
-routes.use("/profile",profileRoute)
-routes.use("/appointment",appointmentRoute)
+routes.use("/profile",authenticate,profileRoute)
+routes.use("/appointment",authenticate,appointmentRoute)
 
 module.exports = routes;

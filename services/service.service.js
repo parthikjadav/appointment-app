@@ -13,18 +13,11 @@ const serviceService = {
                     where: {
                         userId: req.user.id
                     },
-                    include: {
-                        timings: true
-                    }
                 })
                 if(services.length === 0) return new AppError(res,404,"No services found, you have not created any service yet")
                 return services;
             }
-            const services = await prisma.service.findMany({
-                include: {
-                    timings: true
-                }
-            });
+            const services = await prisma.service.findMany({});
             return services;
         } catch (error) {
             return new AppError(res, 500, 'Failed to get all users', error.message);
@@ -56,9 +49,6 @@ const serviceService = {
                     price,
                     userId: profile.userId,
                     profileId,
-                    timings: {
-                        create: req.body.timings
-                    }
                 }
             })
             return service;
@@ -122,30 +112,30 @@ const serviceService = {
             const { id } = req.params;
             const { timing } = req.body;
 
-            const service = await prisma.service.findUnique({
+            const profile = await prisma.profile.findUnique({
                 where: { id },
             });
-            if (!service) {
-                return new AppError(res, 404, 'Service not found');
+            if (!profile) {
+                return new AppError(res, 404, 'Profile not found');
             }
             if (req.user.role !== USER_ROLES.ADMIN) {
-                if (service.userId !== req.user.id) {
+                if (profile.userId !== req.user.id) {
                     return new AppError(res, 403, 'You are not authorized to update this service')
                 }
             }
             await prisma.timing.deleteMany({
-                where: { serviceId: id }
+                where: { profileId: id }
             });
             await prisma.timing.createMany({
-                data: timing.map((t) => ({ ...t, serviceId: id }))
+                data: timing.map((t) => ({ ...t, profileId: id }))
             });
-            const updatedService = await prisma.service.findMany({
+            const updateTimings = await prisma.profile.findUnique({
                 where: { id },
-                include: {
-                    timings: true
+                include:{
+                    timings:true
                 }
             })
-            return updatedService;
+            return updateTimings;
         } catch (error) {
             return new AppError(res, 500, 'Failed to update service', error.message);
         }

@@ -7,11 +7,11 @@ const cache = require("../utils/lru");
 const profileService = {
     getAllUsersProfile: expressAsyncHandler(async (req, res) => {
         try {
-            if(cache.has('profiles')){
+            if (cache.has('profiles')) {
                 return cache.get('profiles');
             }
             const profiles = await prisma.profile.findMany()
-            cache.set('profiles',profiles)
+            cache.set('profiles', profiles)
             return profiles;
         } catch (error) {
             return new AppError(res, 500, 'Failed to get all users profile', error.message);
@@ -20,14 +20,14 @@ const profileService = {
     createProfile: expressAsyncHandler(async (req, res) => {
         try {
             const userId = req.user.id;
-            const { title, bio } = req.body;
+            const { title, bio, timing } = req.body;
             const isAlreadyCreated = await prisma.profile.findUnique({
                 where: {
                     userId
                 }
             });
             console.log(isAlreadyCreated);
-            
+
             if (isAlreadyCreated) {
                 return new AppError(res, 400, 'Profile already exists', 'Profile already exists');
             }
@@ -35,7 +35,13 @@ const profileService = {
                 data: {
                     userId,
                     title,
-                    bio
+                    bio,
+                    timings: {
+                        create: timing
+                    }
+                },
+                include:{
+                    timings:true
                 }
             })
             cache.delete('profiles')
@@ -47,11 +53,11 @@ const profileService = {
     getProfileById: expressAsyncHandler(async (req, res) => {
         try {
             const { id } = req.params
-            if(cache.has(`profile-${id}`)){
+            if (cache.has(`profile-${id}`)) {
                 return cache.get(`profile-${id}`);
             }
             const profile = await prisma.profile.findUnique({ where: { id } })
-            if(!profile){
+            if (!profile) {
                 return new AppError(res, 404, 'Profile not found');
             }
             cache.set(`profile-${id}`, profile)
@@ -66,7 +72,7 @@ const profileService = {
             if (!isProfileExist) {
                 return new AppError(res, 404, 'Profile not found');
             }
-            
+
             if (req.user.role !== USER_ROLES.ADMIN) {
                 if (req.user.id !== isProfileExist.userId) {
                     return new AppError(res, 403, 'You are not authorized to delete this profile');
@@ -78,7 +84,7 @@ const profileService = {
             return profile;
         } catch (error) {
             console.log(error);
-            
+
             return new AppError(res, 500, 'Failed to delete profile', error.message);
         }
     }),
@@ -90,7 +96,7 @@ const profileService = {
                 }
             }
             const { title, bio } = req.body;
-            if(!title && !bio){
+            if (!title && !bio) {
                 return new AppError(res, 400, 'Please provide at least one field to update');
             }
             const profile = await prisma.profile.update({
@@ -100,7 +106,7 @@ const profileService = {
                     bio
                 }
             })
-            if(!profile){
+            if (!profile) {
                 return new AppError(res, 404, 'Profile not found');
             }
             cache.delete(`profile-${req.params.id}`)

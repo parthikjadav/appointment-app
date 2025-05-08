@@ -56,7 +56,7 @@ const appointmentService = {
             const bookedSlots = appointments.map(appointment => {
                 return generateSlots(appointment.from, appointment.to)
             })
-
+            
             const isAlreadyBooked = bookedSlots.flat().find((slot) => {
                 return new Date(slot.startFullDate).getTime() === new Date(newSlot[0].startFullDate).getTime() &&
                     new Date(slot.endFullDate).getTime() === new Date(newSlot[0].endFullDate).getTime()
@@ -94,29 +94,31 @@ const appointmentService = {
     }),
     getFreeSlots: expressAsyncHandler(async (req, res) => {
         try {
-            const { serviceId, date } = req.body
+            const { professionalId, date } = req.body
             const day = new Date(date).getDay()
-            const service = await prisma.service.findUnique({
+            
+            const profile = await prisma.profile.findUnique({
                 where: {
-                    id: serviceId
+                    userId: professionalId
                 },
                 include: {
                     timings: true
                 }
             })
-            if (!service) {
-                return new AppError(res, 400, 'Service not found');
+            
+            if (!profile) {
+                return new AppError(res, 400, 'Profile not found');
             }
-            const isAvailable = service.timings.find(timing => timing.day === day)
+            const isAvailable = profile.timings.find(timing => timing.day === day)
             if (!isAvailable) {
-                return new AppError(res, 400, 'Oops! ,Service is not available on this date');
+                return new AppError(res, 400, 'Oops! , Service is not available on this date');
             }
 
             const slots = generateSlots(isAvailable.startTime, isAvailable.endTime)
 
             let bookedSlots = await prisma.appointment.findMany({
                 where: {
-                    serviceId,
+                    professionalId,
                     status: APPOINTMENT_STATUS.APPROVED
                 },
             })

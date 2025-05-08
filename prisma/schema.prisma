@@ -1,5 +1,6 @@
 generator client {
   provider = "prisma-client-js"
+  output = "../generate/prisma"
 }
 
 datasource db {
@@ -45,6 +46,7 @@ model Profile {
   title    String
   bio      String?
   services Service[]
+  timings      Timing[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -62,7 +64,6 @@ model Service {
   description  String
   price        Float
   appointments Appointment[]
-  timings      Timing[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -89,8 +90,8 @@ model Appointment {
 model Timing {
   id String @id @default(cuid())
 
-  serviceId String
-  service   Service @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  profileId String
+  profile    Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
 
   day       Int
   startTime DateTime

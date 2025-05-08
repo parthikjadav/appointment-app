@@ -9,7 +9,6 @@ route.get('/:id',validateParams(paramIdSchema), serviceController.getServiceById
 route.get('/', serviceController.getAllServices)
 route.post('/', validate(serviceSchema.create), serviceController.createService)
 route.patch("/:id", validateParams(paramIdSchema), validate(serviceSchema.update), serviceController.updateService)
-route.patch("/timing/:id", validateParams(paramIdSchema),validate(serviceSchema.updateTiming), serviceController.updateServiceTiming)
 route.delete("/:id", validateParams(paramIdSchema), serviceController.deleteService)
 
 module.exports = route;

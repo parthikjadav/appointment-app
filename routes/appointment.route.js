@@ -5,10 +5,10 @@ const { validate, appointmentSchema } = require('../validation/zod');
 const { USER_ROLES } = require('../constants');
 const route = express.Router();
 
-route.get('/', authenticate, appointmentController.getAllAppointments)
-route.patch("/cancel/:appointmentId",authenticate, appointmentController.cancelAppointment)
-route.patch("/accept/:appointmentId",authenticate,authorize([USER_ROLES.ADMIN,USER_ROLES.PROFESSIONAL]), appointmentController.acceptAppointment)
-route.post("/slots", authenticate, validate(appointmentSchema.slots), appointmentController.getAllFreeSlots)
-route.post("/", authenticate, validate(appointmentSchema.create), appointmentController.createAppointment)
+route.get('/', appointmentController.getAllAppointments)
+route.patch("/cancel/:appointmentId", appointmentController.cancelAppointment)
+route.patch("/accept/:appointmentId",authorize([USER_ROLES.ADMIN,USER_ROLES.PROFESSIONAL]), appointmentController.acceptAppointment)
+route.post("/slots", validate(appointmentSchema.slots), appointmentController.getAllFreeSlots)
+route.post("/", validate(appointmentSchema.create), appointmentController.createAppointment)
 
 module.exports = route;

@@ -38,10 +38,15 @@ const validator = {
         create: z.object({
             bio: z.string().min(3, { message: "Bio must be at least 3 characters long" }).optional(),
             title: z.string().min(3, { message: "Title must be at least 3 characters long" }),
+            timing: z.array(z.object({
+                day: z.number(),
+                startTime: z.string().datetime().min(1, { message: "Start time must be at least 1 character long" }),
+                endTime: z.string().datetime().min(1, { message: "End time must be at least 1 character long" })
+            }))
         }),
         update: z.object({
             bio: z.string().min(3, { message: "Bio must be at least 3 characters long" }).optional(),
-            title: z.string().min(3, { message: "Title must be at least 3 characters long" }).optional()
+            title: z.string().min(3, { message: "Title must be at least 3 characters long" }).optional(),
         })
     },
     paramIdSchema: z.object({
@@ -53,11 +58,6 @@ const validator = {
             title: z.string().min(3, { message: "Title must be at least 3 characters long" }),
             description: z.string().min(3, { message: "Description must be at least 3 characters long" }),
             price: z.number().min(1, { message: "Price must be at least 1" }),
-            timings: z.array(z.object({
-                day: z.number(),
-                startTime: z.string().datetime().min(1, { message: "Start time must be at least 1 character long" }),
-                endTime: z.string().datetime().min(1, { message: "End time must be at least 1 character long" })
-            }))
         }),
         update: z.object({
             title: z.string().min(3, { message: "Title must be at least 3 characters long" }).optional(),
@@ -82,7 +82,7 @@ const validator = {
         }),
         slots: z.object({
             date: z.string().date().min(1, { message: "Date must be at least 1 character long" }),
-            serviceId: z.string().min(1, { message: "Service id must be at least 1" }),
+            professionalId: z.string().min(1, { message: "Service id must be at least 1" }),
         }),
     }
 }
