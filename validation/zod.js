@@ -70,10 +70,10 @@ const validator = {
                 startTime: z.string().datetime().min(1, { message: "Start time must be at least 1 character long" }),
                 endTime: z.string().datetime().min(1, { message: "End time must be at least 1 character long" })
             }))
-        })
+        }),
     },
     appointmentSchema: {
-        create:  z.object({
+        create: z.object({
             userId: z.string().min(1, { message: "User id must be at least 1" }),
             serviceId: z.string().min(1, { message: "Service id must be at least 1" }),
             professionalId: z.string().min(1, { message: "Professional id must be at least 1" }),
@@ -88,6 +88,17 @@ const validator = {
             appointmentId: z.string().min(1, { message: "Appointment id must be at least 1" }),
             from: z.string().datetime().min(1, { message: "From must be at least 1 character long" }),
             to: z.string().datetime().min(1, { message: "To must be at least 1 character long" }),
+        }),
+    },
+    reviewSchema: {
+        create: z.object({
+            appointmentId: z.string().min(1, { message: "Appointment id must be at least 1" }),
+            rating: z.number().gte(0, { message: "Rating must be at least 0" }).lte(5, { message: "Rating must be at most 5" }),
+            comment: z.string().min(1, { message: "Comment must be at least 1 character long" }),
+        }),
+        update: z.object({
+            rating: z.number().gte(0, { message: "Rating must be at least 0" }).lte(5, { message: "Rating must be at most 5" }).optional(),
+            comment: z.string().min(1, { message: "Comment must be at least 1 character long" }).optional(),
         })
     }
 }

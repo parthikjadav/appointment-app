@@ -10,6 +10,7 @@ route.patch("/cancel/:appointmentId", appointmentController.cancelAppointment)
 route.patch("/accept/:appointmentId",authorize([USER_ROLES.ADMIN,USER_ROLES.PROFESSIONAL]), appointmentController.acceptAppointment)
 route.post("/slots", validate(appointmentSchema.slots), appointmentController.getAllFreeSlots)
 route.post("/reschedule", authorize([USER_ROLES.ADMIN,USER_ROLES.USER]), validate(appointmentSchema.reschedule), appointmentController.rescheduleAppointment)
+route.post("/complete/:appointmentId", authorize([USER_ROLES.ADMIN,USER_ROLES.PROFESSIONAL]), appointmentController.completeAppointment)
 route.post("/", validate(appointmentSchema.create), appointmentController.createAppointment)
 
 module.exports = route;

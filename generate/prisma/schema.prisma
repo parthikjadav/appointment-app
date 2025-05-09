@@ -18,6 +18,7 @@ enum Status {
   PENDING
   APPROVED
   REJECTED
+  COMPLETED
 }
 
 enum PaymentStatus {
@@ -92,6 +93,8 @@ model Appointment {
   refundId        String?
   paymentIntentId String?
 
+  reviews Review[]
+
   status Status   @default(PENDING)
   from   DateTime
   to     DateTime
@@ -124,6 +127,19 @@ model Payment {
 
   amount Float
   status PaymentStatus @default(PENDING)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Review {
+  id String @id @default(cuid())
+
+  appointmentId String
+  appointment   Appointment @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
+
+  rating  Float
+  comment String
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

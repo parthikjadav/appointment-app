@@ -1,23 +1,50 @@
 const expressAsyncHandler = require("express-async-handler");
 const { AppError } = require("../utils/response");
 const prisma = require("../utils/prisma.util");
-const { USER_ROLES } = require("../constants");
+const { USER_ROLES, APPOINTMENT_STATUS } = require("../constants");
 
 
 
 const serviceService = {
     getAllUsersServices: expressAsyncHandler(async (req, res) => {
         try {
-            if (req.user.role !== USER_ROLES.ADMIN) {
+            const role = req.user.role;
+            if (role === USER_ROLES.PROFESSIONAL) {
                 const services = await prisma.service.findMany({
                     where: {
                         userId: req.user.id
                     },
                 })
-                if(services.length === 0) return new AppError(res,404,"No services found, you have not created any service yet")
+                if (services.length === 0) return new AppError(res, 404, "No services found, you have not created any service yet")
                 return services;
             }
-            const services = await prisma.service.findMany({});
+            const appointments = await prisma.appointment.groupBy({
+                by: ["serviceId"],
+                _count: {
+                    serviceId: true
+                },
+                orderBy: {
+                    _count: {
+                        serviceId: "desc"
+                    }
+                }
+            })
+
+            const countMap = {}
+            appointments.filter((item) => {
+                countMap[item.serviceId] = item._count.serviceId
+            })
+
+            let services = await prisma.service.findMany({})
+            services.sort((a, b) => {
+                if (countMap[a.id] > countMap[b.id]) {
+                    return -1;
+                } else {
+                    return 1;
+                }
+            })
+
+            if (services.length === 0) return new AppError(res, 404, "No services found")
             return services;
         } catch (error) {
             return new AppError(res, 500, 'Failed to get all users', error.message);
@@ -131,15 +158,15 @@ const serviceService = {
             });
             const updateTimings = await prisma.profile.findUnique({
                 where: { id },
-                include:{
-                    timings:true
+                include: {
+                    timings: true
                 }
             })
             return updateTimings;
         } catch (error) {
             return new AppError(res, 500, 'Failed to update service', error.message);
         }
-    })
+    }),
 }
 
 module.exports = serviceService;

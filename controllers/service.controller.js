@@ -50,6 +50,14 @@ const serviceController = {
         } catch (error) {
             return new AppError(res, 500, 'Failed to update service timing', error.message);
         }
+   }),
+   addReview: expressAsyncHandler(async (req, res) => {
+        try {
+            const review = await serviceService.addReview(req,res);
+            return new AppResponse(res, 200, 'Review added successfully', review);
+        } catch (error) {
+            return new AppError(res, 500, 'Failed to add review', error.message);
+        }
    })
 };
 

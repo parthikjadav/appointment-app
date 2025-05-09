@@ -29,10 +29,10 @@ const authenticate = async (req, res, next) => {
         return new AppError(res, 401, 'Unauthorized', 'Invalid token');
     }
     const user = await prisma.user.findUnique({ where: { id: decoded.id } })
-    delete user.password; // Remove password from user object
     if (!user) {
         return new AppError(res, 401, 'Unauthorized', 'User not found');
     }
+    delete user.password; // Remove password from user object
     req.user = user;
     next();
 }

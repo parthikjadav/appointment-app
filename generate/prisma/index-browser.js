@@ -186,6 +186,15 @@ exports.Prisma.PaymentScalarFieldEnum = {
   updatedAt: 'updatedAt'
 };
 
+exports.Prisma.ReviewScalarFieldEnum = {
+  id: 'id',
+  appointmentId: 'appointmentId',
+  rating: 'rating',
+  comment: 'comment',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -209,7 +218,8 @@ exports.Role = exports.$Enums.Role = {
 exports.Status = exports.$Enums.Status = {
   PENDING: 'PENDING',
   APPROVED: 'APPROVED',
-  REJECTED: 'REJECTED'
+  REJECTED: 'REJECTED',
+  COMPLETED: 'COMPLETED'
 };
 
 exports.PaymentStatus = exports.$Enums.PaymentStatus = {
@@ -224,7 +234,8 @@ exports.Prisma.ModelName = {
   Service: 'Service',
   Appointment: 'Appointment',
   Timing: 'Timing',
-  Payment: 'Payment'
+  Payment: 'Payment',
+  Review: 'Review'
 };
 
 /**

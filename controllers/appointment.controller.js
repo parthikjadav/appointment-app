@@ -50,7 +50,15 @@ const appointmentController = {
          } catch (error) {
              return new AppError(res, 500, 'Failed to reschedule appointment', error.message);
          }
-     })
+     }),
+     completeAppointment: expressAsyncHandler(async (req, res) => {
+         try {
+             const appointment = await appointmentService.completeAppointment(req,res);
+             return new AppResponse(res,200, 'Appointment completed successfully', appointment)                                   
+         } catch (error) {
+             return new AppError(res, 500, 'Failed to complete appointment', error.message);
+         }
+     }),
 };
 
 module.exports = appointmentController;

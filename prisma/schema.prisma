@@ -1,6 +1,5 @@
 generator client {
   provider = "prisma-client-js"
-  output   = "../generate/prisma"
 }
 
 datasource db {
@@ -18,6 +17,7 @@ enum Status {
   PENDING
   APPROVED
   REJECTED
+  COMPLETED
 }
 
 enum PaymentStatus {
@@ -35,6 +35,7 @@ model User {
 
   profile  Profile?
   services Service[]
+  reviews Review[]
 
   booked       Appointment[] @relation("Booked")
   appointments Appointment[] @relation("Professional")
@@ -70,6 +71,7 @@ model Service {
   description  String
   price        Float
   appointments Appointment[]
+  reviews      Review[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -124,6 +126,22 @@ model Payment {
 
   amount Float
   status PaymentStatus @default(PENDING)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Review {
+  id String @id @default(cuid())
+
+  serviceId String
+  service Service @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+
+  userId String
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  rating  Float
+  comment String
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

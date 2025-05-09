@@ -189,7 +189,7 @@ const appointmentService = {
                 }
             }
 
-            if(appointment.isRefunded){
+            if (appointment.isRefunded) {
                 return new AppError(res, 400, 'This appointment has cancelled and already been refunded');
             }
 
@@ -197,7 +197,7 @@ const appointmentService = {
                 const refund = await stripe.refunds.create({
                     payment_intent: appointment.paymentIntentId
                 })
-                
+
                 await prisma.appointment.update({
                     where: {
                         id: appointmentId
@@ -250,7 +250,7 @@ const appointmentService = {
                     return new AppError(res, 403, 'You are not authorized to accept this appointment');
                 }
             }
-            if(!appointment.isPaid || appointment.isRefunded){
+            if (!appointment.isPaid || appointment.isRefunded) {
                 return new AppError(res, 403, 'You can not accept this appointment');
             }
             const updated = await prisma.appointment.update({
@@ -315,6 +315,53 @@ const appointmentService = {
             return updatedAppointment;
         } catch (error) {
             return new AppError(res, 500, 'Failed to reschedule appointment', error.message);
+        }
+    }),
+    completeAppointment: expressAsyncHandler(async (req, res) => {
+        try {
+            const { appointmentId } = req.params;
+            const { role, id } = req.user;
+
+            if (!appointmentId) {
+                return new AppError(res, 400, 'Appointment ID is required');
+            }
+
+            const appointment = await prisma.appointment.findUnique({
+                where: {
+                    id: appointmentId
+                },
+                include: {
+                    professional: true,
+                    user: true
+                }
+            })
+
+            if (!appointment) {
+                return new AppError(res, 404, 'Appointment not found');
+            }
+
+            if (role === USER_ROLES.PROFESSIONAL) {
+                if (appointment.professionalId !== id) {
+                    return new AppError(res, 403, 'You are not authorized to complete this appointment');
+                }
+            }
+
+            if (appointment.status !== APPOINTMENT_STATUS.APPROVED || !appointment.isPaid || appointment.isRefunded) {
+                return new AppError(res, 400, 'You can not mark this appointment as completed');
+            }
+
+            const updatedAppointment = await prisma.appointment.update({
+                where: {
+                    id: appointmentId
+                },
+                data: {
+                    status: APPOINTMENT_STATUS.COMPLETED
+                }
+            })
+
+            return updatedAppointment;
+        } catch (error) {
+            return new AppError(res, 500, 'Failed to complete appointment', error.message);
         }
     }),
 }
