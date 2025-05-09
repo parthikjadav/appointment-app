@@ -155,6 +155,10 @@ exports.Prisma.AppointmentScalarFieldEnum = {
   userId: 'userId',
   serviceId: 'serviceId',
   professionalId: 'professionalId',
+  isPaid: 'isPaid',
+  isRefunded: 'isRefunded',
+  refundId: 'refundId',
+  paymentIntentId: 'paymentIntentId',
   status: 'status',
   from: 'from',
   to: 'to',
@@ -168,6 +172,16 @@ exports.Prisma.TimingScalarFieldEnum = {
   day: 'day',
   startTime: 'startTime',
   endTime: 'endTime',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.PaymentScalarFieldEnum = {
+  id: 'id',
+  appointmentId: 'appointmentId',
+  paymentIntentId: 'paymentIntentId',
+  amount: 'amount',
+  status: 'status',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };
@@ -198,12 +212,19 @@ exports.Status = exports.$Enums.Status = {
   REJECTED: 'REJECTED'
 };
 
+exports.PaymentStatus = exports.$Enums.PaymentStatus = {
+  PAID: 'PAID',
+  PENDING: 'PENDING',
+  FAILED: 'FAILED'
+};
+
 exports.Prisma.ModelName = {
   User: 'User',
   Profile: 'Profile',
   Service: 'Service',
   Appointment: 'Appointment',
-  Timing: 'Timing'
+  Timing: 'Timing',
+  Payment: 'Payment'
 };
 
 /**

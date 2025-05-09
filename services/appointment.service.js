@@ -1,10 +1,12 @@
 const expressAsyncHandler = require("express-async-handler");
-const { AppError } = require("../utils/response");
 const { USER_ROLES, APPOINTMENT_STATUS } = require("../constants");
-const prisma = require("../utils/prisma.util");
+// utils
 const generateSlots = require("../utils");
-const { canCancelAppointment } = require("../utils/reusable");
+const prisma = require("../utils/prisma.util");
 const event = require("../utils/eventEmitter");
+const { AppError } = require("../utils/response");
+const { canCancelAppointment } = require("../utils/reusable");
+const { createPaymentIntent, stripe } = require("../utils/stripe");
 
 const appointmentService = {
     getAppointments: expressAsyncHandler(async (req, res) => {
@@ -38,6 +40,14 @@ const appointmentService = {
     createAppointment: expressAsyncHandler(async (req, res) => {
         try {
             const { userId, serviceId, professionalId, from, to } = req.body
+            const service = await prisma.service.findUnique({
+                where: {
+                    id: serviceId
+                }
+            })
+            if (!service) {
+                return new AppError(res, 404, 'Service not found');
+            }
             const appointments = await prisma.appointment.findMany({
                 where: {
                     professionalId,
@@ -56,7 +66,7 @@ const appointmentService = {
             const bookedSlots = appointments.map(appointment => {
                 return generateSlots(appointment.from, appointment.to)
             })
-            
+
             const isAlreadyBooked = bookedSlots.flat().find((slot) => {
                 return new Date(slot.startFullDate).getTime() === new Date(newSlot[0].startFullDate).getTime() &&
                     new Date(slot.endFullDate).getTime() === new Date(newSlot[0].endFullDate).getTime()
@@ -85,10 +95,10 @@ const appointmentService = {
             delete appointment.user.password
             delete appointment.professional.password
             event.emit('appointment:created', appointment)
+            appointment.payment_url = await createPaymentIntent(service.price, appointment.id)
             return appointment;
         } catch (error) {
             console.log(error);
-
             return new AppError(res, 500, 'Failed to create appointment', error.message);
         }
     }),
@@ -96,7 +106,7 @@ const appointmentService = {
         try {
             const { professionalId, date } = req.body
             const day = new Date(date).getDay()
-            
+
             const profile = await prisma.profile.findUnique({
                 where: {
                     userId: professionalId
@@ -105,7 +115,7 @@ const appointmentService = {
                     timings: true
                 }
             })
-            
+
             if (!profile) {
                 return new AppError(res, 400, 'Profile not found');
             }
@@ -155,11 +165,11 @@ const appointmentService = {
                 },
                 include: {
                     user: true,
-                    professional:true,
+                    professional: true,
                 }
             })
 
-            if (!appointment) {
+            if (!appointment || !appointment.paymentIntentId) {
                 return new AppError(res, 404, 'Appointment not found');
             }
 
@@ -172,13 +182,35 @@ const appointmentService = {
                     return new AppError(res, 400, 'You can not cancel an appointment, that is starting soon!');
                 }
             } else if (req.user.role === USER_ROLES.PROFESSIONAL) {
-                if(appointment.status === APPOINTMENT_STATUS.APPROVED){
+                if (appointment.status === APPOINTMENT_STATUS.APPROVED) {
                     return new AppError(res, 400, 'You can not cancel an appointment, after approving it.');
-                }else if(appointment.professionalId !== id){
+                } else if (appointment.professionalId !== id) {
                     return new AppError(res, 403, 'You are not authorized to cancel this appointment');
                 }
             }
 
+            if(appointment.isRefunded){
+                return new AppError(res, 400, 'This appointment has cancelled and already been refunded');
+            }
+
+            try {
+                const refund = await stripe.refunds.create({
+                    payment_intent: appointment.paymentIntentId
+                })
+                
+                await prisma.appointment.update({
+                    where: {
+                        id: appointmentId
+                    },
+                    data: {
+                        isRefunded: true,
+                        refundId: refund.id
+                    }
+                })
+            } catch (error) {
+                console.error('Refund failed:', error.message);
+                return res.status(500).json({ error: 'Refund failed' });
+            }
             const updated = await prisma.appointment.update({
                 where: {
                     id: appointmentId
@@ -187,7 +219,8 @@ const appointmentService = {
                     status: APPOINTMENT_STATUS.REJECTED
                 }
             })
-            event.emit('appointment:cancelled',appointment);
+            event.emit('appointment:cancelled', appointment);
+            event.emit('appointment:refunded', appointment);
             return updated;
         } catch (error) {
             return new AppError(res, 500, 'Failed to cancel appointment', error.message);
@@ -212,12 +245,14 @@ const appointmentService = {
                 return new AppError(res, 404, 'Appointment not found');
             }
 
-            if(req.user.role === USER_ROLES.PROFESSIONAL){
+            if (req.user.role === USER_ROLES.PROFESSIONAL) {
                 if (appointment.professionalId !== id) {
                     return new AppError(res, 403, 'You are not authorized to accept this appointment');
                 }
             }
-
+            if(!appointment.isPaid || appointment.isRefunded){
+                return new AppError(res, 403, 'You can not accept this appointment');
+            }
             const updated = await prisma.appointment.update({
                 where: {
                     id: appointmentId
@@ -231,7 +266,57 @@ const appointmentService = {
         } catch (error) {
             return new AppError(res, 500, 'Failed to accept appointment', error.message);
         }
-    })
+    }),
+    rescheduleAppointment: expressAsyncHandler(async (req, res) => {
+        try {
+            const { appointmentId, from, to } = req.body;
+            const appointment = await prisma.appointment.findUnique({
+                where: {
+                    id: appointmentId
+                },
+                include: {
+                    professional: true,
+                    user: true
+                }
+            })
+
+            if (!appointment) {
+                return new AppError(res, 404, 'Appointment not found');
+            }
+
+            if (req.user.role === USER_ROLES.USER) {
+                if (appointment.user.id !== req.user.id) {
+                    return new AppError(res, 403, 'You are not authorized to reschedule this appointment');
+                }
+            }
+
+            if (!canCancelAppointment(appointment.from)) {
+                return new AppError(res, 400, 'You can only cancel appointment 15 Minutes before');
+            }
+
+            const updatedAppointment = await prisma.appointment.update({
+                where: {
+                    id: appointmentId
+                },
+                data: {
+                    from,
+                    to
+                },
+                include: {
+                    professional: true,
+                    user: true
+                }
+            })
+
+            if (!updatedAppointment) {
+                return new AppError(res, 500, 'Failed to reschedule appointment');
+            }
+            event.emit('appointment:rescheduled', updatedAppointment);
+            return updatedAppointment;
+        } catch (error) {
+            return new AppError(res, 500, 'Failed to reschedule appointment', error.message);
+        }
+    }),
 }
 
 module.exports = appointmentService;

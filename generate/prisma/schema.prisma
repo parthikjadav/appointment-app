@@ -20,6 +20,12 @@ enum Status {
   REJECTED
 }
 
+enum PaymentStatus {
+  PAID
+  PENDING
+  FAILED
+}
+
 model User {
   id       String @id @default(uuid())
   name     String
@@ -79,6 +85,13 @@ model Appointment {
   service      Service @relation(fields: [serviceId], references: [id], onDelete: Cascade)
   professional User    @relation("Professional", fields: [professionalId], references: [id], onDelete: Cascade)
 
+  payment Payment[]
+
+  isPaid          Boolean @default(false)
+  isRefunded      Boolean @default(false)
+  refundId        String?
+  paymentIntentId String?
+
   status Status   @default(PENDING)
   from   DateTime
   to     DateTime
@@ -96,6 +109,21 @@ model Timing {
   day       Int
   startTime DateTime
   endTime   DateTime
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Payment {
+  id String @id @default(cuid())
+
+  appointmentId String
+  appointment   Appointment @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
+
+  paymentIntentId String
+
+  amount Float
+  status PaymentStatus @default(PENDING)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

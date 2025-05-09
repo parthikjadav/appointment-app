@@ -1,6 +1,6 @@
 generator client {
   provider = "prisma-client-js"
-  output = "../generate/prisma"
+  output   = "../generate/prisma"
 }
 
 datasource db {
@@ -18,6 +18,12 @@ enum Status {
   PENDING
   APPROVED
   REJECTED
+}
+
+enum PaymentStatus {
+  PAID
+  PENDING
+  FAILED
 }
 
 model User {
@@ -46,7 +52,7 @@ model Profile {
   title    String
   bio      String?
   services Service[]
-  timings      Timing[]
+  timings  Timing[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -79,6 +85,13 @@ model Appointment {
   service      Service @relation(fields: [serviceId], references: [id], onDelete: Cascade)
   professional User    @relation("Professional", fields: [professionalId], references: [id], onDelete: Cascade)
 
+  payment Payment[]
+
+  isPaid          Boolean @default(false)
+  isRefunded      Boolean @default(false)
+  refundId        String?
+  paymentIntentId String?
+
   status Status   @default(PENDING)
   from   DateTime
   to     DateTime
@@ -91,11 +104,26 @@ model Timing {
   id String @id @default(cuid())
 
   profileId String
-  profile    Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  profile   Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
 
   day       Int
   startTime DateTime
   endTime   DateTime
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Payment {
+  id String @id @default(cuid())
+
+  appointmentId String
+  appointment   Appointment @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
+
+  paymentIntentId String
+
+  amount Float
+  status PaymentStatus @default(PENDING)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

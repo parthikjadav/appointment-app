@@ -13,10 +13,19 @@ const APPOINTMENT_STATUS = {
 const env = {
     APP_EMAIL: process.env.APP_EMAIL,
     APP_PASSWORD: process.env.APP_PASSWORD,
+    BASE_URL: process.env.BASE_URL,
+    STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY,
+}
+
+const PAYMENT_STATUS = {
+    PAID: 'PAID',
+    PENDING: 'PENDING',
+    FAILED: 'FAILED'
 }
 
 module.exports = {
     USER_ROLES,
     APPOINTMENT_STATUS,
+    PAYMENT_STATUS,
     env
 }

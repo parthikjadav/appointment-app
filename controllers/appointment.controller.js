@@ -42,6 +42,14 @@ const appointmentController = {
          } catch (error) {
              return new AppError(res, 500, 'Failed to accept appointment', error.message);
          }
+     }),
+     rescheduleAppointment: expressAsyncHandler(async (req, res) => {
+         try {
+             const appointment = await appointmentService.rescheduleAppointment(req,res);
+             return new AppResponse(res,200, 'Appointment rescheduled successfully', appointment)                                   
+         } catch (error) {
+             return new AppError(res, 500, 'Failed to reschedule appointment', error.message);
+         }
      })
 };
 

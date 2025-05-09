@@ -35,11 +35,14 @@
 // }
 // console.log(generateSlots("2025-05-07T04:00:00.000Z","2025-05-07T04:30:00.000Z"));
 
-const now = new Date(2025,4,8,9,0,0);
-const temp = new Date("2025-05-08T04:02:05.224Z")
+const now = new Date();
+const temp = new Date(2025, 4, 8, 12, 40, 0, 0);
 
 console.log(now);
 console.log(now.toString());
+console.log(temp);
+console.log(temp.toString());
+
 
 // console.log(temp.toString());
 

@@ -9,7 +9,7 @@ const userRoute = require("./user.route")
 const authRoute = require("./auth.route")
 const serviceRoute = require("./service.route")
 const profileRoute = require("./profile.route");
-const appointmentRoute = require("./appointment.route")
+const appointmentRoute = require("./appointment.route");
 
 routes.use("/auth",authRoute)
 routes.use("/user",authenticate,userRoute)

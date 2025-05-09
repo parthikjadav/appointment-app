@@ -1,2 +1,0 @@
-TODO: 1. change finding free slots from serviceId to professionalId 
-       

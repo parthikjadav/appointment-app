@@ -84,6 +84,11 @@ const validator = {
             date: z.string().date().min(1, { message: "Date must be at least 1 character long" }),
             professionalId: z.string().min(1, { message: "Service id must be at least 1" }),
         }),
+        reschedule: z.object({
+            appointmentId: z.string().min(1, { message: "Appointment id must be at least 1" }),
+            from: z.string().datetime().min(1, { message: "From must be at least 1 character long" }),
+            to: z.string().datetime().min(1, { message: "To must be at least 1 character long" }),
+        })
     }
 }
 
