@@ -113,23 +113,43 @@ const reviewService = {
     getServiceReviewsById: expressAsyncHandler(async (req, res) => {
         try {
             const { id } = req.params;
+            let { search = '', limit = 10, rating} = req.query;
+            limit = parseInt(limit)
+            rating = parseInt(rating)
             if (!id) {
                 return new AppError(res, 400, 'Service id is required');
             }
             const service = await prisma.service.findUnique({
                 where: {
-                    id
-                },
-                include: {
-                    reviews: true
+                    id,
                 }
             })
 
-            if (!service || service.reviews.length === 0) {
+            if (!service) {
                 return new AppError(res, 404, 'Service or Reviews not found');
             }
 
-            return service.reviews;
+            const filterQuery = {
+                where: {
+                    serviceId: id,
+                    comment: {
+                        contains: search
+                    },
+                },
+                take: limit,
+            }
+
+            if(rating) {
+                filterQuery.where.rating = rating
+            }
+
+            const reviews = await prisma.review.findMany(filterQuery)
+
+            if(reviews.length === 0){
+                return new AppError(res, 404, 'Reviews not found');
+            }
+
+            return reviews;
         } catch (error) {
             return new AppError(res, 500, 'Failed to get reviews', error.message);
         }

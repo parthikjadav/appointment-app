@@ -100,6 +100,13 @@ const validator = {
             rating: z.number().gte(0, { message: "Rating must be at least 0" }).lte(5, { message: "Rating must be at most 5" }).optional(),
             comment: z.string().min(1, { message: "Comment must be at least 1 character long" }).optional(),
         })
+    },
+    chatSchema: {
+        create: z.object({
+            serviceId: z.string().min(1, { message: "Service id must be at least 1" }).optional(),
+            professionalId: z.string().min(1, { message: "Professional id must be at least 1" }).optional(),
+            query: z.string().min(1, { message: "Query must be at least 1 character long" }),
+        })
     }
 }
 

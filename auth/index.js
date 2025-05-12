@@ -20,21 +20,32 @@ const verifyToken = (token) => {
 }
 
 const authenticate = async (req, res, next) => {
-    const token = req.cookies.token
-    if (!token) {
-        return new AppError(res, 401, 'Unauthorized', 'No token provided');
+    try {
+        let apiKey = req.body?.apiKey;
+        
+        let decoded;
+        if (!apiKey) {
+            const token = req.cookies.token;
+            if (!token) {
+                return new AppError(res, 401, 'Unauthorized', 'No token provided');
+            }
+            decoded = verifyToken(token);
+            if (!decoded) {
+                return new AppError(res, 401, 'Unauthorized', 'Invalid token');
+            }
+        }
+        const user = await prisma.user.findUnique({ where: { id: decoded?.id || apiKey } })
+
+        if (!user) {
+            return new AppError(res, 401, 'Unauthorized', 'User not found');
+        }
+        delete user.password; // Remove password from user object
+        req.user = user;
+        next();
+    } catch (error) {
+        console.log("failed to authenticate user", error.message);
+        return new AppError(res, 500, 'Internal Server Error', 'Failed to authenticate user')
     }
-    const decoded = verifyToken(token);
-    if (!decoded) {
-        return new AppError(res, 401, 'Unauthorized', 'Invalid token');
-    }
-    const user = await prisma.user.findUnique({ where: { id: decoded.id } })
-    if (!user) {
-        return new AppError(res, 401, 'Unauthorized', 'User not found');
-    }
-    delete user.password; // Remove password from user object
-    req.user = user;
-    next();
 }
 
 const authorize = (roles) => (req, res, next) => {

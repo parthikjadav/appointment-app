@@ -16,6 +16,7 @@ const env = {
     APP_PASSWORD: process.env.APP_PASSWORD,
     BASE_URL: process.env.BASE_URL,
     STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY,
+    GEMINI_MODEL: process.env.GEMINI_MODEL,
 }
 
 const PAYMENT_STATUS = {

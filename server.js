@@ -17,6 +17,10 @@ app.use(cookieParser());
 // Serve static files (optional for CSS, JS, images)
 app.use(express.static(path.join(__dirname, 'public')));
 
+app.get('/', (req, res) => {
+    res.json('Hello World!')
+})
+
 // Routes serving specific HTML pages
 app.get('/success', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'success.html'));

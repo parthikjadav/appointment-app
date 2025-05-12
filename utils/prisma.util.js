@@ -1,5 +1,7 @@
-const { PrismaClient } = require("@prisma/client");
+const { PrismaClient } = require("@prisma/client")
 
-const prisma = new PrismaClient();
+const prisma = globalThis.prisma || new PrismaClient()
 
-module.exports = prisma;
+if (process.env.NODE_ENV !== 'production') globalThis.prisma = prisma
+
+module.exports = prisma

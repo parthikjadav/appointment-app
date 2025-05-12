@@ -11,11 +11,13 @@ const serviceRoute = require("./service.route")
 const reviewRoute = require("./review.route")
 const profileRoute = require("./profile.route");
 const appointmentRoute = require("./appointment.route");
+const chatRoute = require("./chat.route");
 
 routes.use("/auth",authRoute)
 routes.use("/user",authenticate,userRoute)
 routes.use("/service",authenticate,serviceRoute)
 routes.use("/review",authenticate,reviewRoute)
+routes.use("/chat",authenticate,chatRoute)
 routes.use("/profile",authenticate,profileRoute)
 routes.use("/appointment",authenticate,appointmentRoute)
 
