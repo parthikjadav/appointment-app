@@ -36,20 +36,16 @@ const getFreeSlotsForSpecificServiceDeclaration = {
 
 const acceptAppointmentRequestDeclaration = {
     name: 'accept_appointment_request',
-    description: 'Accept an appointment request for a specific service by a professional the required fields are userId, and appointmentId if any other fields are provided then ignore them',
+    description: 'Accept an appointment request for a specific service by a professional the required fields is appointmentId if any other fields are provided then ignore them',
     parameters: {
         type: Type.OBJECT,
         properties: {
-            userId: {
-                type: Type.STRING,
-                description: "user id to accept appointment request for specific service",
-            },
             appointmentId: {
                 type: Type.STRING,
                 description: "appointment id to accept appointment request for specific service",
             },
         },
-        required: ["userId", "appointmentId"],
+        required: ["appointmentId"],
     }
 }
 
@@ -148,19 +144,20 @@ const bookAppointment = async (data) => {
 
 const acceptAppointmentRequest = async (data) => {
     try {
-        const { userId, appointmentId, apiKey } = data;
+        const { appointmentId, apiKey } = data;
 
-        const appointment = await (await fetch(`${env.BASE_URL}/api/appointment/accept`, {
-            method: "POST",
+        const appointment = await (await fetch(`${env.BASE_URL}/api/appointment/accept/${appointmentId}`, {
+            method: "PATCH",
             headers: {
                 "Content-Type": "application/json",
             },
             body: JSON.stringify({
-                userId,
-                appointmentId,
                 apiKey
             })
         })).json()
+
+        console.log(appointment, "appointment");
+
 
         if (!appointment.success) {
             throw new Error(appointment.message)

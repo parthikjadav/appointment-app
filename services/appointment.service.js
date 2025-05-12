@@ -245,13 +245,17 @@ const appointmentService = {
                 return new AppError(res, 404, 'Appointment not found');
             }
 
+            if (appointment.status === APPOINTMENT_STATUS.APPROVED) {
+                return new AppError(res, 400, 'This appointment is already accepted');
+            }
+
             if (req.user.role === USER_ROLES.PROFESSIONAL) {
                 if (appointment.professionalId !== id) {
                     return new AppError(res, 403, 'You are not authorized to accept this appointment');
                 }
             }
             if (!appointment.isPaid || appointment.isRefunded) {
-                return new AppError(res, 403, 'You can not accept this appointment');
+                return new AppError(res, 403, 'You can not accept this appointment this is not paid or got refunded');
             }
             const updated = await prisma.appointment.update({
                 where: {
