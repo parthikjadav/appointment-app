@@ -167,6 +167,49 @@ const serviceService = {
             return new AppError(res, 500, 'Failed to update service', error.message);
         }
     }),
+    search: expressAsyncHandler(async (req, res) => {
+        try {
+            const { search = '' } = req.query
+            const services = await prisma.service.findMany({
+                where: {
+                    OR: [
+                        {
+                            title: {
+                                contains: search
+                            }
+                        }, {
+                            description: {
+                                contains: search
+                            }
+                        }
+                    ]
+                }
+            })
+
+            const profiles = await prisma.profile.findMany({
+                where: {
+                    OR: [
+                        {
+                            title: {
+                                contains: search
+                            }
+                        }, {
+                            bio: {
+                                contains: search
+                            }
+                        }
+                    ]
+                }
+            })
+            if (services.length === 0 && profiles.length === 0) return new AppError(res, 404, "No Search Results Found");
+            return {
+                services,
+                profiles
+            };
+        } catch (error) {
+            return new AppError(res, 500, "Internal Error In Searching Services", error.message)
+        }
+    })
 }
 
 module.exports = serviceService;

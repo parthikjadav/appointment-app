@@ -58,6 +58,14 @@ const serviceController = {
         } catch (error) {
             return new AppError(res, 500, 'Failed to add review', error.message);
         }
+   }),
+   search: expressAsyncHandler(async (req, res) => {
+        try {
+            const services = await serviceService.search(req,res);
+            return new AppResponse(res, 200, 'Services retrieved successfully', services);
+        } catch (error) {
+            return new AppError(res, 500, 'Failed to retrieve services', error.message);
+        }
    })
 };
 
